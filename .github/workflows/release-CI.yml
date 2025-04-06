@@ -44,6 +44,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          overwrite: true
   windows:
     runs-on: windows-latest
     strategy:
@@ -74,6 +75,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          overwrite: true
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -104,6 +106,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          overwrite: true
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
@@ -153,6 +156,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          overwrite: true
   release:
     name: Release
     runs-on: ubuntu-latest
