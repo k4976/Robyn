@@ -10,10 +10,12 @@ env:
   UV_SYSTEM_PYTHON: 1
 jobs:
   macos:
+    if: false
     runs-on: macos-13
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        # python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v3
       - name: Install uv
@@ -44,15 +46,17 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ github.job }}-universal-${{ matrix.python-version }}
           path: dist
-          overwrite: true
   windows:
+    # if: false
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        target: [x64, x86]
+        # python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9"]
+        # target: [x64, x86]
+        target: [x64]
     steps:
       - uses: actions/checkout@v3
       - name: Install uv
@@ -75,15 +79,16 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
-          overwrite: true
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        target: [x86_64, i686]
+        # python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9"]
+        # target: [x86_64, i686]
+        target: [x86_64]
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
@@ -106,21 +111,22 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
-          overwrite: true
   linux-cross:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python:
           [
             { version: "3.9", abi: "cp39-cp39" },
-            { version: "3.10", abi: "cp310-cp310" },
-            { version: "3.11", abi: "cp311-cp311" },
-            { version: "3.12", abi: "cp312-cp312" },
+            # { version: "3.10", abi: "cp310-cp310" },
+            # { version: "3.11", abi: "cp311-cp311" },
+            # { version: "3.12", abi: "cp312-cp312" },
           ]
-        target: [aarch64, armv7]
+        # target: [aarch64, armv7]
+        target: [aarch64]
     steps:
       - uses: actions/checkout@v3
       - name: Build Wheels
@@ -156,13 +162,43 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python.version }}-${{ matrix.python.abi }}
           path: dist
-          overwrite: true
+  merge:
+    name: Building Single Artifact
+    runs-on: ubuntu-latest
+    # needs: [macos, windows, linux, linux-cross]
+    needs: [windows, linux]
+    steps:
+      # - name: Merging all Artifacts...
+      #   uses: actions/upload-artifact/merge@v4
+      #   with: 
+      #     name: wheels
+      #     pattern: wheels-*
+
+      - name: Downloading all Artifacts...
+        uses: actions/download-artifact@v4
+        with: 
+          path: artifacts
+          pattern: wheels-*
+          merge-multiple: true
+      - run: ls -R artifacts
+      - run: |
+          echo "Listing directories..."
+          ls -R
+          echo "### Listing directories1..."
+          ls -lrth
+      - name: Uploading a Bundle Artifacts...
+        uses: actions/upload-artifact@v4
+        with: 
+          name: wheels
+          path: artifacts
+      
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [macos, windows, linux, linux-cross]
+    # needs: [macos, windows, linux, linux-cross, merge]
+    needs: [windows, linux]
     steps:
       - uses: actions/download-artifact@v3
         with:
