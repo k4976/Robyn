@@ -10,6 +10,7 @@ env:
   UV_SYSTEM_PYTHON: 1
 jobs:
   macos:
+    if: false
     runs-on: macos-13
     strategy:
       matrix:
@@ -47,6 +48,7 @@ jobs:
           name: wheels-${{ github.job }}-universal-${{ matrix.python-version }}
           path: dist
   windows:
+    if: false
     runs-on: windows-latest
     strategy:
       matrix:
@@ -80,8 +82,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        target: [x86_64, i686]
+        # python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9"]
+        # target: [x86_64, i686]
+        target: [x86_64]
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
@@ -107,6 +111,7 @@ jobs:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
   linux-cross:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -158,7 +163,8 @@ jobs:
   merge:
     name: Building Single Artifact
     runs-on: ubuntu-latest
-    needs: [macos, windows, linux, linux-cross]
+    # needs: [macos, windows, linux, linux-cross]
+    needs: [linux]
     steps:
       - name: Downloading all Artifacts
         uses: actions/download-artifact@v4
@@ -178,9 +184,10 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [macos, windows, linux, linux-cross, merge]
+    # needs: [macos, windows, linux, linux-cross, merge]
+    needs: [linux, merge]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: wheels
       - name: Install uv
