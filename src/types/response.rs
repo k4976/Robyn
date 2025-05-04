@@ -75,9 +75,14 @@ impl ToPyObject for Response {
             Err(_) => PyBytes::new(py, &self.description.to_vec()).into(),
         };
 
+        // let response_type = self.response_type.clone();
+
+
+        // println!("response_type: {:?}", "text");
+        println!("response_type: text");
         let response = PyResponse {
             status_code: self.status_code,
-            response_type: self.response_type.clone(),
+            response_type: "text".to_string(),
             headers,
             description,
             file_path: self.file_path.clone(),
@@ -110,6 +115,7 @@ impl PyResponse {
         status_code: u16,
         headers: &PyAny,
         description: Py<PyAny>,
+        response_type: Option<String>,
     ) -> PyResult<Self> {
         check_body_type(py, &description)?;
 
@@ -127,15 +133,43 @@ impl PyResponse {
             ));
         };
 
+        let response_type = response_type.unwrap_or_else(|| "text".to_string());
+        if !response_type.is_ascii() {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "response_type must be a string",
+            ));
+        }
+
         Ok(Self {
             status_code,
             // we should be handling based on headers but works for now
-            response_type: "text".to_string(),
+            response_type: response_type,
             headers: headers_output,
             description,
             file_path: None,
         })
     }
+
+    pub fn __repr__(&self, py: Python) -> PyResult<String> {
+    // pub fn __repr__(&self) -> String {
+        Ok(format!(
+            "Response(status_code={}, response_type={}, headers={:?}, description={})",
+            self.status_code.to_string(), 
+            self.response_type.to_string(), 
+            // self.headers.as_ref(py).try_borrow()?.headers, 
+            self.headers.try_borrow(py)?.headers,
+            self.description.as_ref(py)
+            // ()?.headers, 
+            // self.headers.get()?.headers,
+            // (py)?.headers.tostring(),
+            // self.description.as_ref(py).tostring()
+        ))
+    }
+
+    pub fn __str__(&self, py: Python) -> PyResult<String> {
+        Ok(self.__repr__(py)?)
+    }
+    
 
     #[setter]
     pub fn set_description(&mut self, py: Python, description: Py<PyAny>) -> PyResult<()> {

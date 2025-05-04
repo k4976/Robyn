@@ -297,6 +297,21 @@ class Response:
     response_type: Optional[str] = None
     file_path: Optional[str] = None
 
+    def __repr__(self) -> str:
+        """
+        Returns:
+            The string representation of the response object.
+        """
+        return f"<Response {self.status_code} {self.response_type}>"
+
+    def __post_init__(self) -> None:
+        if isinstance(self.headers, dict):
+            self.headers = Headers(self.headers)
+        if isinstance(self.description, bytes):
+            self.description = self.description.decode("utf-8")
+        if not isinstance(self.response_type, str):
+            raise ValueError("response_type must be a string")
+
     def set_cookie(self, key: str, value: str) -> None:
         """
         Sets the cookie in the response.
