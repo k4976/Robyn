@@ -9,8 +9,8 @@ on:
   # performance analysis in order to generate initial data.
   workflow_dispatch:
 
-env:
-  UV_SYSTEM_PYTHON: 1
+# env:
+#   UV_SYSTEM_PYTHON: 1
 
 jobs:
   benchmarks:
@@ -22,38 +22,23 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           python-version: 3.9
-          # activate-environment: true
+          activate-environment: true
 
       # - name: Install Python 3.9
         # run: uv python install 3.9
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.9"
 
       - name: Install dependencies with uv
         run: |
           # echo -e "\nEcho: Showing Files..."
           # ls -a
-
-          echo -e "\nEcho: Installing poetry...."
-          uv pip install poetry poetry-plugin-export
-
-          echo -e "\nEcho: running poetry lock"
-          uv run poetry lock
-
-          # echo -e "\nEcho: Showing Files..."
-          # ls -a
-
-          echo -e "\nEcho: Exporting requirement file using poetry...."
-          uv run poetry export --with test --with dev --without-hashes --output requirements.txt
-
-          echo -e "\nEcho: Installing from requirements file...."
-          uv pip install -r requirements.txt
-          uv pip install -e .
-
           echo -e "\n Echo: again pip list-2"
           uv pip list
+
+          uv sync --group test
 
           echo -e "\n Echo: checking where is maturin"
           whereis maturin
@@ -61,16 +46,14 @@ jobs:
           echo -e "\n Echo2: checking where is maturin"
           which maturin
 
+          echo -e "\n Echo: checking matrix.os=${{ matrix.os }}"
           echo -e "\n Echo: checking matrix.os=${{ matrix }}"
 
 
       - name: Setup Rust part of the project
         run: |
-          which maturin
-          where maturin
-          exit 0
-          # maturin build -i python --universal2 --out dist
-          uv run maturin build -i python --universal2 --out dist
+          maturin build -i python --universal2 --out dist
+          # uv run maturin build -i python --universal2 --out dist
           uv pip install --no-index --find-links=dist/ robyn
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v2
