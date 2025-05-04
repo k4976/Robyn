@@ -27,13 +27,11 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
-          uv pip install poetry
-          uv run poetry export --with test --with dev --without-hashes --output requirements.txt
-          uv pip install -r requirements.txt
-          uv pip install -e .
-      - name: Add macos target
-        if: matrix.os == 'macos'
-        run: rustup target add aarch64-apple-darwin
+          uv pip list
+          uv sync --group test
+          echo "again pip list-2"
+          uv pip list
+
       - name: Setup Rust part of the project
         run: |
           maturin build -i python --universal2 --out dist
