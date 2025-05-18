@@ -16,48 +16,60 @@ jobs:
   benchmarks:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Setting up Repo
+        uses: actions/checkout@v4
+      
+      - name: Setting up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
 
-      - name: Install uv
+      - name: Setting up UV
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.9
+          version: "0.7.5"
           activate-environment: true
 
-      # - name: Install Python 3.9
-        # run: uv python install 3.9
-
-      # - uses: actions/setup-python@v5
-      #   with:
-      #     python-version: "3.9"
-
-      - name: Install dependencies with uv
+      - name: Install Dependencies using UV
         run: |
-          # echo -e "\nEcho: Showing Files..."
-          # ls -a
-          echo -e "\n Echo: again pip list-2"
+          # echo "Installing Pip"
+          uv pip install pip
+          pip list
           uv pip list
+          rustc --version
+          cargo --version
 
-          uv sync --group test
+          which rustc cargo
 
-          echo -e "\n Echo: checking where is maturin"
-          whereis maturin
-
-          echo -e "\n Echo2: checking where is maturin"
-          which maturin
-
+          # Installing Dependencies
+          # uv pip install -r pyproject.toml --group dev --group test --system
+          uv sync --group test --inexact --no-install-project
+          
           echo -e "\n Echo: checking matrix.os=${{ matrix.os }}"
           echo -e "\n Echo: checking matrix.os=${{ matrix }}"
-
-
+          
       - name: Setup Rust part of the project
         run: |
+          echo
+          echo "::group::Checking dependencies"
+          # Checking dependencies, If not found any then it will stop the job.
+          which uv python pip maturin pytest
+          
+          # Checking Pip List
+          pip list
+          echo "::endgroup::"
+          echo "::group::Running build"
+
           maturin build -i python --universal2 --out dist
-          # uv run maturin build -i python --universal2 --out dist
-          uv pip install --no-index --find-links=dist/ robyn
+          pip install --no-index --find-links=dist/ robyn
+          echo "::endgroup::"
+          # Run the checking
+          echo Hi
+
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v2
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
-          run: pytest integration_tests --codspeed
-
+          run: |
+            pip list
+            pytest integration_tests --codspeed
