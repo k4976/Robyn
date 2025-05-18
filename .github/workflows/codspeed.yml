@@ -9,8 +9,8 @@ on:
   # performance analysis in order to generate initial data.
   workflow_dispatch:
 
-# env:
-#   UV_SYSTEM_PYTHON: 1
+env:
+  UV_SYSTEM_PYTHON: 1
 
 jobs:
   benchmarks:
@@ -28,48 +28,31 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: "0.7.5"
-          activate-environment: true
 
       - name: Install Dependencies using UV
         run: |
-          # echo "Installing Pip"
-          uv pip install pip
-          pip list
-          uv pip list
-          rustc --version
-          cargo --version
-
-          which rustc cargo
-
-          # Installing Dependencies
-          # uv pip install -r pyproject.toml --group dev --group test --system
-          uv sync --group test --inexact --no-install-project
-          
-          echo -e "\n Echo: checking matrix.os=${{ matrix.os }}"
-          echo -e "\n Echo: checking matrix.os=${{ matrix }}"
+          echo "# Installing Dependencies"
+          uv pip install -r pyproject.toml --group dev --group test
+          echo "# Installing Project"
+          uv pip install -e .
           
       - name: Setup Rust part of the project
         run: |
-          echo
           echo "::group::Checking dependencies"
           # Checking dependencies, If not found any then it will stop the job.
           which uv python pip maturin pytest
-          
           # Checking Pip List
           pip list
           echo "::endgroup::"
-          echo "::group::Running build"
-
+          
+          echo "::group::Running & Installing build"
           maturin build -i python --universal2 --out dist
           pip install --no-index --find-links=dist/ robyn
           echo "::endgroup::"
-          # Run the checking
-          echo Hi
 
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v2
+        uses: CodSpeedHQ/action@v3.5.0
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: |
-            pip list
-            pytest integration_tests --codspeed
+            pytest integration_tests/ --codspeed
