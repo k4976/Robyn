@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ github.job }}-universal-${{ matrix.python-version }}
-          path: dist
+          path: dist/*.whl
   windows:
     if: false
     runs-on: windows-latest
@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
-          path: dist
+          path: dist/*.whl
   linux:
     if: false
     runs-on: ubuntu-latest
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python-version }}
-          path: dist
+          path: dist/*.whl
   linux-cross:
     # if: false
     runs-on: ubuntu-latest
@@ -126,7 +126,8 @@ jobs:
             # { version: "3.12", abi: "cp312-cp312" },
             { version: "3.13", abi: "cp313-cp313" },
           ]
-        target: [aarch64, armv7]
+        # target: [aarch64, armv7]
+        target: [armv7]
     steps:
       - uses: actions/checkout@v3
       - name: Build Wheels
@@ -143,7 +144,7 @@ jobs:
           arch: ${{ matrix.target }}
           # distro: ubuntu22.04
           distro: ubuntu24.04
-          # githubToken: ${{ github.token }}
+          githubToken: ${{ github.token }}
           # Mount the dist directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/dist:/artifacts"
@@ -164,31 +165,52 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ github.job }}-${{ matrix.target }}-${{ matrix.python.version }}-${{ matrix.python.abi }}
-          path: dist
+          path: dist/*.whl
+  
+  sdist:
+    name: Building Source Distribution
+    runs-on: ubuntu-latest
+    # needs: [macos, windows, linux, linux-cross]
+    # needs: [linux-cross, sdist]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          # rust-toolchain: stable
+          command: sdist
+          args: --out dist
+      - name: Uploading source distribution Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+  
   merge:
     name: Building Single Artifact
     runs-on: ubuntu-latest
-    # needs: [macos, windows, linux, linux-cross]
-    needs: [linux-cross]
+    needs: [linux-cross, sdist]
+    # needs: sdist
     steps:
-      - name: Downloading all Artifacts
+      - name: Downloading all wheel artifacts
         uses: actions/download-artifact@v4
         with:
-          path: tempDir
+          path: artifacts
           pattern: wheels-*
-      - run: |
-          echo "Listing directories & files"
-          ls -R
-          mkdir artifacts
-          # Move all files from each artifact directory into the artifacts directory
-          find tempDir -mindepth 2 -type f -exec mv -t artifacts {} +
-          # Remove the now-empty subdirectories
-          # find . -type d -empty -not -path . -delete
-          echo "2: Listing directories & files"
-          ls -R
+          merge-multiple: true
 
+      - name: Downloading source distribution artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: artifacts
 
-      - name: Uploading Artifact's Bundle
+      - name: Uploading artifact's Bundle
         uses: actions/upload-artifact@v4
         with:
           name: wheels
@@ -201,10 +223,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: dist
           name: wheels
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
+          path: dist
+      - uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
