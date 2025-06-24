@@ -25,16 +25,16 @@ classifiers = [
 ]
 dependencies = [
   "inquirerpy == 0.3.4",
-  "multiprocess == 0.70.14",
-  "orjson == 3.9.15",
-  "rustimport == 1.3.4",
+  "multiprocess == 0.70.18",
+  "orjson == 3.10.18",
+  "rustimport == 1.7.1",
   # conditional
   "uvloop~=0.21.0; sys_platform != 'win32' and platform_python_implementation == 'CPython' and platform_machine != 'armv7l'",
-  "watchdog == 4.0.1",
+  "watchdog == 6.0.0",
 ]
 
 [project.optional-dependencies]
-"templating" = ["jinja2 == 3.0.1"]
+"templating" = ["jinja2 == 3.1.6"]
 
 [project.urls]
 Documentation = "https://robyn.tech/"
@@ -48,19 +48,19 @@ test_server = "integration_tests.base_routes:main"
 
 [dependency-groups]
 dev = [
-  "black==23.1",
-  "commitizen==2.40",
-  "isort==5.11.5",
+  "black==25.1.0",
+  "commitizen==4.8.3",
+  "isort==6.0.1",
   "maturin==0.14.12",
-  "pre-commit==2.21.0",
-  "ruff==0.1.3",
+  "pre-commit==4.2.0",
+  "ruff==0.11.13",
 ]
 test = [
-  "nox==2023.4.22",
-  "pytest==7.2.1",
-  "pytest-codspeed==1.2.2",
-  "requests==2.28.2",
-  "websocket-client==1.5.0",
+  "nox==2025.5.1",
+  "pytest==8.4.0",
+  "pytest-codspeed==3.0.0",
+  "requests==2.32.4",
+  "websocket-client==1.8.0",
 ]
 
 
@@ -74,13 +74,12 @@ authors = ["Sanskar Jethi <sansyrox@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 inquirerpy = "0.3.4"
-maturin = "0.14.12"
-watchdog = "4.0.1"
-multiprocess = "0.70.14"
+multiprocess = "0.70.18"
+orjson = "^3.10.18"
+rustimport = "^1.7.1"
 uvloop = { version = "0.21.0", markers = "sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')" }
-jinja2 = { version = "3.0.1", optional = true }
-rustimport = "^1.3.4"
-orjson = "^3.9.15"
+watchdog = "6.0.0"
+jinja2 = { version = "3.1.6", optional = true }
 
 [tool.poetry.extras]
 templating = ["jinja2"]
@@ -89,21 +88,22 @@ templating = ["jinja2"]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.1.3"
-black = "23.1"
-isort = "5.11.5"
-pre-commit = "2.21.0"
-commitizen = "2.40"
+black = "25.1.0"
+commitizen = "4.8.3"
+isort = "6.0.1"
+maturin = "0.14.12"
+pre-commit = "4.2.0"
+ruff = "0.11.13"
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
-pytest = "7.2.1"
+nox = "2025.5.1"
+pytest = "8.4.0"
 pytest-codspeed = "3.0.0"
-requests = "2.28.2"
-nox = "2023.4.22"
-websocket-client = "1.5.0"
+requests = "2.32.4"
+websocket-client = "1.8.0"
 
 [tool.poetry.scripts]
 test_server = { callable = "integration_tests.base_routes:main" }
